@@ -9,7 +9,7 @@ import { formatFileSize, formatDuration } from '@/lib/utils'
 import {
   Play,
   Pause,
-  Tag,
+  Tag as TagIcon,
   Plus,
   X,
   Film,
@@ -370,7 +370,7 @@ export default function AssetTaggingPage() {
                             className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                             style={{ backgroundColor: tag.color + '20', color: tag.color }}
                           >
-                            <Tag className="h-4 w-4 mr-1" />
+                            <TagIcon className="h-4 w-4 mr-1" />
                             {tag.name}
                             <button
                               onClick={() => removeTagFromAsset(tag.id)}
@@ -416,7 +416,7 @@ export default function AssetTaggingPage() {
                                     color: isTagApplied(tag.id) ? tag.color : '#374151'
                                   }}
                                 >
-                                  <Tag className="h-4 w-4 mr-1" />
+                                  <TagIcon className="h-4 w-4 mr-1" />
                                   {tag.name}
                                   {isTagApplied(tag.id) && (
                                     <Check className="h-3 w-3 ml-1" />
