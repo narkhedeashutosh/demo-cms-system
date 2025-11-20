@@ -386,10 +386,16 @@ export default function AssureQCPage() {
                 {/* Video Player */}
                 <Card>
                   <CardContent className="p-6">
-                    <AdvancedVideoPlayer
-                      src={selectedAsset.previewUrl}
-                      className="w-full aspect-video"
-                    />
+                    {selectedAsset.previewUrl ? (
+                      <AdvancedVideoPlayer
+                        src={selectedAsset.previewUrl}
+                        className="w-full aspect-video"
+                      />
+                    ) : (
+                      <div className="w-full aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+                        <p className="text-gray-500">No preview available</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

@@ -238,7 +238,7 @@ export default function LinguaXPage() {
           id: Math.random().toString(36).substr(2, 9),
           language: lang,
           voice: voiceOptions[0].name,
-          gender: voiceOptions[0].gender,
+          gender: voiceOptions[0].gender as 'male' | 'female' | 'neutral',
           accent: voiceOptions[0].accent,
           status: 'generating' as const,
           progress: 0
@@ -486,10 +486,16 @@ export default function LinguaXPage() {
                 {/* Video Player */}
                 <Card>
                   <CardContent className="p-6">
-                    <AdvancedVideoPlayer
-                      src={selectedAsset.previewUrl}
-                      className="w-full aspect-video"
-                    />
+                    {selectedAsset.previewUrl ? (
+                      <AdvancedVideoPlayer
+                        src={selectedAsset.previewUrl}
+                        className="w-full aspect-video"
+                      />
+                    ) : (
+                      <div className="w-full aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+                        <p className="text-gray-500">No preview available</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

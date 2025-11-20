@@ -326,11 +326,17 @@ export default function AssetReviewPage() {
                 {/* Media Player */}
                 <Card>
                   <CardContent className="p-6">
-                    <AdvancedVideoPlayer
-                      src={selectedAsset.previewUrl}
-                      onTimeUpdate={handleTimeUpdate}
-                      className="w-full aspect-video"
-                    />
+                    {selectedAsset.previewUrl ? (
+                      <AdvancedVideoPlayer
+                        src={selectedAsset.previewUrl}
+                        onTimeUpdate={handleTimeUpdate}
+                        className="w-full aspect-video"
+                      />
+                    ) : (
+                      <div className="w-full aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+                        <p className="text-gray-500">No preview available</p>
+                      </div>
+                    )}
 
                     {/* Controls */}
                     <div className="flex justify-between items-center mt-4">
