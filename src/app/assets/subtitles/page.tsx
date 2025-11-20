@@ -20,6 +20,7 @@ import {
   Check,
   X,
 } from 'lucide-react'
+import AdvancedVideoPlayer from '@/components/player/AdvancedVideoPlayer'
 
 export default function AssetSubtitlesPage() {
   const [assets, setAssets] = useState<Asset[]>([])
@@ -330,78 +331,12 @@ export default function AssetSubtitlesPage() {
                 {/* Media Player */}
                 <Card>
                   <CardContent className="p-6">
-                    <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
-                      {selectedAsset.fileType === 'video' ? (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <div className="text-6xl mb-4">🎬</div>
-                            <p className="text-lg">Video Player</p>
-                            <p className="text-sm text-gray-300">{selectedAsset.originalName}</p>
-                          </div>
-                        </div>
-                      ) : selectedAsset.fileType === 'audio' ? (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <div className="text-6xl mb-4">🎵</div>
-                            <p className="text-lg">Audio Player</p>
-                            <p className="text-sm text-gray-300">{selectedAsset.originalName}</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <div className="text-6xl mb-4">📄</div>
-                            <p className="text-lg">Media Player</p>
-                            <p className="text-sm text-gray-300">{selectedAsset.originalName}</p>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Play/Pause Button */}
-                      {(selectedAsset.fileType === 'video' || selectedAsset.fileType === 'audio') && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <button
-                            onClick={togglePlayPause}
-                            className="bg-black bg-opacity-50 text-white rounded-full p-4 hover:bg-opacity-70 transition-opacity"
-                          >
-                            {isPlaying ? (
-                              <Pause className="h-8 w-8" />
-                            ) : (
-                              <Play className="h-8 w-8" />
-                            )}
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Current Subtitle Display */}
-                      {getCurrentSubtitle() && (
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <div className="bg-black bg-opacity-75 text-white p-3 rounded-lg text-center">
-                            <p className="text-lg">{getCurrentSubtitle()?.content}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Time Display */}
-                      {(selectedAsset.fileType === 'video' || selectedAsset.fileType === 'audio') && (
-                        <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
-                          <Clock className="h-4 w-4 inline mr-1" />
-                          {formatDuration(currentTime)} / {formatDuration(selectedAsset.duration || 0)}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Progress Bar */}
-                    {(selectedAsset.fileType === 'video' || selectedAsset.fileType === 'audio') && (
-                      <div className="mt-4">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${(currentTime / (selectedAsset.duration || 1)) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    )}
+                    <AdvancedVideoPlayer
+                      src={selectedAsset.previewUrl}
+                      subtitles={selectedAsset.subtitles}
+                      onTimeUpdate={(time) => setCurrentTime(time)}
+                      className="w-full aspect-video"
+                    />
                   </CardContent>
                 </Card>
 

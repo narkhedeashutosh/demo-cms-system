@@ -19,7 +19,25 @@ import {
   Music,
   FileText,
   Info,
+  MessageSquare,
+  Send,
+  ThumbsUp,
+  Reply,
+  User,
 } from 'lucide-react'
+import AdvancedVideoPlayer from '@/components/player/AdvancedVideoPlayer'
+
+interface Comment {
+  id: string
+  content: string
+  author: string
+  authorRole: string
+  timestamp: number
+  createdAt: Date
+  replies: Comment[]
+  likes: number
+  liked: boolean
+}
 
 export default function AssetReviewPage() {
   const [assets, setAssets] = useState<Asset[]>([])
@@ -27,6 +45,9 @@ export default function AssetReviewPage() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [newComment, setNewComment] = useState('')
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
 
   useEffect(() => {
     // Mock data - in a real app, this would fetch from an API
@@ -66,7 +87,7 @@ export default function AssetReviewPage() {
         updatedAt: new Date(),
         downloadUrl: '/api/assets/1/download',
         thumbnailUrl: '/api/assets/1/thumbnail',
-        previewUrl: '/api/assets/1/preview',
+        previewUrl: 'https://www.youtube.com/watch?v=E-ZrSefNsJI&list=RDE-ZrSefNsJI&start_radio=1',
       },
       {
         id: '2',
@@ -127,9 +148,47 @@ export default function AssetReviewPage() {
       },
     ]
 
+    const mockComments: Comment[] = [
+      {
+        id: '1',
+        content: 'Great product demonstration! The quality looks excellent.',
+        author: 'John Smith',
+        authorRole: 'Reviewer',
+        timestamp: 15,
+        createdAt: new Date(Date.now() - 86400000),
+        replies: [
+          {
+            id: '2',
+            content: 'I agree, the lighting is perfect for this type of content.',
+            author: 'Jane Doe',
+            authorRole: 'Editor',
+            timestamp: 15,
+            createdAt: new Date(Date.now() - 43200000),
+            replies: [],
+            likes: 3,
+            liked: false
+          }
+        ],
+        likes: 5,
+        liked: true
+      },
+      {
+        id: '3',
+        content: 'The audio quality could be improved around the 45-second mark.',
+        author: 'Mike Johnson',
+        authorRole: 'Audio Engineer',
+        timestamp: 45,
+        createdAt: new Date(Date.now() - 172800000),
+        replies: [],
+        likes: 2,
+        liked: false
+      }
+    ]
+
     setTimeout(() => {
       setAssets(mockAssets)
       setSelectedAsset(mockAssets[0])
+      setComments(mockComments)
       setIsLoading(false)
     }, 1000)
   }, [])
@@ -151,6 +210,52 @@ export default function AssetReviewPage() {
 
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying)
+  }
+
+  const handleTimeUpdate = (time: number) => {
+    setCurrentTime(time)
+  }
+
+  const addComment = () => {
+    if (!newComment.trim() || !selectedAsset) return
+
+    const comment: Comment = {
+      id: Math.random().toString(36).substr(2, 9),
+      content: newComment,
+      author: 'Current User',
+      authorRole: 'Reviewer',
+      timestamp: currentTime,
+      createdAt: new Date(),
+      replies: [],
+      likes: 0,
+      liked: false
+    }
+
+    if (replyingTo) {
+      setComments(prev => prev.map(c => 
+        c.id === replyingTo 
+          ? { ...c, replies: [...c.replies, comment] }
+          : c
+      ))
+      setReplyingTo(null)
+    } else {
+      setComments(prev => [comment, ...prev])
+    }
+
+    setNewComment('')
+  }
+
+  const likeComment = (commentId: string) => {
+    setComments(prev => prev.map(comment => {
+      if (comment.id === commentId) {
+        return {
+          ...comment,
+          liked: !comment.liked,
+          likes: comment.liked ? comment.likes - 1 : comment.likes + 1
+        }
+      }
+      return comment
+    }))
   }
 
   if (isLoading) {
@@ -221,73 +326,11 @@ export default function AssetReviewPage() {
                 {/* Media Player */}
                 <Card>
                   <CardContent className="p-6">
-                    <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
-                      {selectedAsset.fileType === 'video' ? (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <div className="text-6xl mb-4">🎬</div>
-                            <p className="text-lg">Video Preview</p>
-                            <p className="text-sm text-gray-300">{selectedAsset.originalName}</p>
-                          </div>
-                        </div>
-                      ) : selectedAsset.fileType === 'image' ? (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <div className="text-6xl mb-4">🖼️</div>
-                            <p className="text-lg">Image Preview</p>
-                            <p className="text-sm text-gray-300">{selectedAsset.originalName}</p>
-                          </div>
-                        </div>
-                      ) : selectedAsset.fileType === 'audio' ? (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <div className="text-6xl mb-4">🎵</div>
-                            <p className="text-lg">Audio Preview</p>
-                            <p className="text-sm text-gray-300">{selectedAsset.originalName}</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <div className="text-6xl mb-4">📄</div>
-                            <p className="text-lg">Document Preview</p>
-                            <p className="text-sm text-gray-300">{selectedAsset.originalName}</p>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Play/Pause Button */}
-                      {(selectedAsset.fileType === 'video' || selectedAsset.fileType === 'audio') && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <button
-                            onClick={togglePlayPause}
-                            className="bg-black bg-opacity-50 text-white rounded-full p-4 hover:bg-opacity-70 transition-opacity"
-                          >
-                            {isPlaying ? (
-                              <Pause className="h-8 w-8" />
-                            ) : (
-                              <Play className="h-8 w-8" />
-                            )}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Progress Bar */}
-                    {(selectedAsset.fileType === 'video' || selectedAsset.fileType === 'audio') && (
-                      <div className="mt-4">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${(currentTime / (selectedAsset.duration || 1)) * 100}%` }}
-                          ></div>
-                        </div>
-                        <div className="flex justify-between text-sm text-gray-500 mt-1">
-                          <span>{formatDuration(currentTime)}</span>
-                          <span>{formatDuration(selectedAsset.duration || 0)}</span>
-                        </div>
-                      </div>
-                    )}
+                    <AdvancedVideoPlayer
+                      src={selectedAsset.previewUrl}
+                      onTimeUpdate={handleTimeUpdate}
+                      className="w-full aspect-video"
+                    />
 
                     {/* Controls */}
                     <div className="flex justify-between items-center mt-4">
@@ -424,6 +467,146 @@ export default function AssetReviewPage() {
                         </div>
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+
+                {/* Comments Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <MessageSquare className="h-5 w-5 mr-2" />
+                      Comments & Feedback
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Add Comment */}
+                    <div className="mb-6">
+                      <div className="flex space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <User className="h-4 w-4 text-white" />
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <textarea
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            placeholder="Add a comment at the current time..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                            rows={3}
+                          />
+                          <div className="flex justify-between items-center mt-2">
+                            <span className="text-xs text-gray-500">
+                              Comment at {formatDuration(currentTime)}
+                            </span>
+                            <Button onClick={addComment} disabled={!newComment.trim()}>
+                              <Send className="h-4 w-4 mr-1" />
+                              Post Comment
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Comments List */}
+                    <div className="space-y-4">
+                      {comments.map((comment) => (
+                        <div key={comment.id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0">
+                              <div className="h-8 w-8 bg-gray-500 rounded-full flex items-center justify-center">
+                                <User className="h-4 w-4 text-white" />
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="font-medium text-gray-900">{comment.author}</span>
+                                <span className="text-xs text-gray-500">{comment.authorRole}</span>
+                                <span className="text-xs text-blue-600">
+                                  {formatDuration(comment.timestamp)}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {comment.createdAt.toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-gray-700 mb-2">{comment.content}</p>
+                              <div className="flex items-center space-x-4">
+                                <button
+                                  onClick={() => likeComment(comment.id)}
+                                  className={`flex items-center space-x-1 text-xs ${
+                                    comment.liked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600'
+                                  }`}
+                                >
+                                  <ThumbsUp className="h-3 w-3" />
+                                  <span>{comment.likes}</span>
+                                </button>
+                                <button
+                                  onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                                  className="text-xs text-gray-500 hover:text-blue-600 flex items-center space-x-1"
+                                >
+                                  <Reply className="h-3 w-3" />
+                                  <span>Reply</span>
+                                </button>
+                              </div>
+
+                              {/* Replies */}
+                              {comment.replies.length > 0 && (
+                                <div className="mt-4 ml-4 space-y-3">
+                                  {comment.replies.map((reply) => (
+                                    <div key={reply.id} className="flex items-start space-x-3">
+                                      <div className="flex-shrink-0">
+                                        <div className="h-6 w-6 bg-gray-400 rounded-full flex items-center justify-center">
+                                          <User className="h-3 w-3 text-white" />
+                                        </div>
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center space-x-2 mb-1">
+                                          <span className="font-medium text-gray-900 text-sm">{reply.author}</span>
+                                          <span className="text-xs text-gray-500">{reply.authorRole}</span>
+                                          <span className="text-xs text-gray-500">
+                                            {reply.createdAt.toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                        <p className="text-gray-700 text-sm">{reply.content}</p>
+                                        <div className="flex items-center space-x-2 mt-1">
+                                          <button
+                                            onClick={() => likeComment(reply.id)}
+                                            className={`flex items-center space-x-1 text-xs ${
+                                              reply.liked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600'
+                                            }`}
+                                          >
+                                            <ThumbsUp className="h-3 w-3" />
+                                            <span>{reply.likes}</span>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Reply Form */}
+                              {replyingTo === comment.id && (
+                                <div className="mt-4 ml-4">
+                                  <div className="flex space-x-2">
+                                    <textarea
+                                      value={newComment}
+                                      onChange={(e) => setNewComment(e.target.value)}
+                                      placeholder="Write a reply..."
+                                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                      rows={2}
+                                    />
+                                    <Button onClick={addComment} disabled={!newComment.trim()} size="sm">
+                                      <Send className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               </>

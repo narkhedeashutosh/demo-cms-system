@@ -15,12 +15,35 @@ import {
   Film,
   Image,
   Music,
+  Share2,
+  Clock,
+  Settings,
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
 } from 'lucide-react'
 
 export default function AssetIngestPage() {
   const [dragActive, setDragActive] = useState(false)
   const [uploads, setUploads] = useState<UploadProgress[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [showIngestOptions, setShowIngestOptions] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [startTime, setStartTime] = useState({ hours: 0, minutes: 0, seconds: 0, frames: 0 })
+  const [ingestOptions, setIngestOptions] = useState({
+    transcode: true,
+    generateThumbnails: true,
+    extractMetadata: true,
+    qualityCheck: false,
+    createProxy: true
+  })
+  const [sharingOptions, setSharingOptions] = useState({
+    public: false,
+    allowDownload: true,
+    allowComments: false,
+    expires: null as Date | null
+  })
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -247,6 +270,137 @@ export default function AssetIngestPage() {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Ingest Options */}
+        {selectedFile && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Ingest Options for {selectedFile.name}</span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowIngestOptions(!showIngestOptions)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configure
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Start Time Input */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Start of Media (HH:MM:SS:FF)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="23"
+                      value={startTime.hours}
+                      onChange={(e) => setStartTime(prev => ({ ...prev, hours: parseInt(e.target.value) || 0 }))}
+                      className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
+                      placeholder="HH"
+                    />
+                    <span>:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={startTime.minutes}
+                      onChange={(e) => setStartTime(prev => ({ ...prev, minutes: parseInt(e.target.value) || 0 }))}
+                      className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
+                      placeholder="MM"
+                    />
+                    <span>:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={startTime.seconds}
+                      onChange={(e) => setStartTime(prev => ({ ...prev, seconds: parseInt(e.target.value) || 0 }))}
+                      className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
+                      placeholder="SS"
+                    />
+                    <span>:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="29"
+                      value={startTime.frames}
+                      onChange={(e) => setStartTime(prev => ({ ...prev, frames: parseInt(e.target.value) || 0 }))}
+                      className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
+                      placeholder="FF"
+                    />
+                  </div>
+                </div>
+
+                {/* Processing Options */}
+                {showIngestOptions && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">Processing Options</h4>
+                    <div className="space-y-3">
+                      {Object.entries(ingestOptions).map(([key, value]) => (
+                        <label key={key} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={value}
+                            onChange={(e) => setIngestOptions(prev => ({ ...prev, [key]: e.target.checked }))}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700 capitalize">
+                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sharing Options */}
+                {showIngestOptions && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Sharing Options
+                    </h4>
+                    <div className="space-y-3">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={sharingOptions.public}
+                          onChange={(e) => setSharingOptions(prev => ({ ...prev, public: e.target.checked }))}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">Make public</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={sharingOptions.allowDownload}
+                          onChange={(e) => setSharingOptions(prev => ({ ...prev, allowDownload: e.target.checked }))}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">Allow download</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={sharingOptions.allowComments}
+                          onChange={(e) => setSharingOptions(prev => ({ ...prev, allowComments: e.target.checked }))}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">Allow comments</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         )}

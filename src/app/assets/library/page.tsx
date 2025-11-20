@@ -19,6 +19,10 @@ import {
   Tag,
   Trash2,
   Download,
+  Grid3X3,
+  List,
+  Archive,
+  RotateCcw,
 } from 'lucide-react'
 
 export default function AssetLibraryPage() {
@@ -35,6 +39,7 @@ export default function AssetLibraryPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   const [selectedAssets, setSelectedAssets] = useState<string[]>([])
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   useEffect(() => {
     // Mock data - in a real app, this would fetch from an API
@@ -266,20 +271,30 @@ export default function AssetLibraryPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Asset Library</h1>
+            <h1 className="text-2xl font-bold text-gray-900">AssetLib</h1>
             <p className="text-gray-600">Manage and organize your media assets</p>
           </div>
           <div className="flex space-x-3">
+            <div className="flex border border-gray-300 rounded-lg">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
             <Button
               variant="secondary"
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
-            </Button>
-            <Button>
-              <Download className="h-4 w-4 mr-2" />
-              Upload
             </Button>
           </div>
         </div>
@@ -381,17 +396,24 @@ export default function AssetLibraryPage() {
                 {selectedAssets.length === filteredAssets.length ? 'Deselect All' : 'Select All'}
               </Button>
               {selectedAssets.length > 0 && (
-              <Button variant="danger" size="sm">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete ({selectedAssets.length})
-              </Button>
+                <>
+                  <Button variant="secondary" size="sm">
+                    <Archive className="h-4 w-4 mr-2" />
+                    Archive ({selectedAssets.length})
+                  </Button>
+                  <Button variant="danger" size="sm">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete ({selectedAssets.length})
+                  </Button>
+                </>
               )}
             </div>
           )}
         </div>
 
-        {/* Asset Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Asset Display */}
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredAssets.map((asset) => (
             <Card key={asset.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="aspect-video bg-gray-100 relative">
@@ -465,12 +487,12 @@ export default function AssetLibraryPage() {
 
                   <div className="flex justify-between pt-2">
                     <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
+                      <RotateCcw className="h-4 w-4 mr-1" />
+                      Restore
                     </Button>
                     <Button variant="ghost" size="sm">
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
                     </Button>
                   </div>
                 </div>
@@ -478,6 +500,69 @@ export default function AssetLibraryPage() {
             </Card>
           ))}
         </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredAssets.map((asset) => (
+              <Card key={asset.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedAssets.includes(asset.id)}
+                      onChange={() => handleSelectAsset(asset.id)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    
+                    <div className="flex-shrink-0 w-16 h-12 bg-gray-100 rounded flex items-center justify-center">
+                      {getFileTypeIcon(asset.fileType)}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-medium text-gray-900 truncate">
+                        {asset.originalName}
+                      </h3>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                        <span>{formatFileSize(asset.fileSize)}</span>
+                        {asset.duration && (
+                          <span>{formatDuration(asset.duration)}</span>
+                        )}
+                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(asset.status)}`}>
+                          {asset.status}
+                        </span>
+                        <span>Uploaded {formatDate(asset.uploadedAt)}</span>
+                      </div>
+                      
+                      {asset.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {asset.tags.map((tag) => (
+                            <span
+                              key={tag.id}
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                            >
+                              <Tag className="h-3 w-3 mr-1" />
+                              {tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm">
+                        <RotateCcw className="h-4 w-4 mr-1" />
+                        Restore
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {filteredAssets.length === 0 && (
           <Card>
